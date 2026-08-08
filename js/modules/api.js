@@ -1,7 +1,5 @@
-import { STORAGE_KEYS, DEFAULT_SETTINGS } from './config.js';
-
 export async function fetchAvailableModels() {
-  const res = await fetch('https://gen.pollinations.ai/image/models');
+  const res = await fetch('/api/models');
 
   if (!res.ok) {
     throw new Error(`HTTP ${res.status}`);
@@ -13,52 +11,28 @@ export async function fetchAvailableModels() {
     throw new Error('Invalid response format');
   }
 
-  return data
-    .map(m => m?.name || m)
-    .filter(Boolean);
+  return data.filter(m => m && m.name).map(m => m.name);
 }
 
-export function buildImageUrl(prompt, settings) {
-  const cleanPrompt = String(prompt || '').trim();
-
-  if (!cleanPrompt) {
-    throw new Error('Prompt is required');
+export async function buildImageUrl(prompt, settings) {
+  if (!prompt?.trim()) {
+    throw new Error('Please enter a prompt.');
   }
 
-  const s = {
-    ...DEFAULT_SETTINGS,
-    ...(settings || {})
-  };
+  const params = new URLSearchParams({
+    prompt: prompt.trim(),
+    model: settings.model || 'flux',
+    width: settings.width || 1024,
+    height: settings.height || 1024
+  });
 
-  if (!s.model) {
-    throw new Error('Image model is required');
+  if (settings.seed) {
+    params.append('seed', settings.seed);
   }
 
-  const params = new URLSearchParams();
-
-  params.set('model', s.model);
-
-  if (s.width) {
-    params.set('width', String(s.width));
+  if (settings.transparent) {
+    params.append('transparent', 'true');
   }
 
-  if (s.height) {
-    params.set('height', String(s.height));
-  }
-
-  if (s.seed !== undefined && s.seed !== null && String(s.seed).trim()) {
-    params.set('seed', String(s.seed).trim());
-  }
-
-  if (s.transparent === true) {
-    params.set('transparent', 'true');
-  }
-
-  // API key:
-  // Only use a client-safe / authorized key in a frontend app.
-  if (s.apiKey && String(s.apiKey).trim()) {
-    params.set('key', String(s.apiKey).trim());
-  }
-
-  return `https://gen.pollinations.ai/image/${encodeURIComponent(cleanPrompt)}?${params.toString()}`;
+  return `/api/image?${params.toString()}`;
 }
