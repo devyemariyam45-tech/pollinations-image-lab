@@ -1,17 +1,12 @@
 export async function fetchAvailableModels() {
-  const res = await fetch('/api/models');
-
-  if (!res.ok) {
-    throw new Error(`HTTP ${res.status}`);
-  }
-
-  const data = await res.json();
-
-  if (!Array.isArray(data)) {
-    throw new Error('Invalid response format');
-  }
-
-  return data.filter(m => m && m.name).map(m => m.name);
+  return [
+    'flux',
+    'zimage',
+    'kontext',
+    'nanobanana',
+    'seedream',
+    'gptimage'
+  ];
 }
 
 export async function buildImageUrl(prompt, settings) {
@@ -20,7 +15,6 @@ export async function buildImageUrl(prompt, settings) {
   }
 
   const params = new URLSearchParams({
-    prompt: prompt.trim(),
     model: settings.model || 'flux',
     width: settings.width || 1024,
     height: settings.height || 1024
@@ -34,5 +28,7 @@ export async function buildImageUrl(prompt, settings) {
     params.append('transparent', 'true');
   }
 
-  return `/api/image?${params.toString()}`;
+  return `https://gen.pollinations.ai/image/${encodeURIComponent(
+    prompt.trim()
+  )}?${params.toString()}`;
 }
