@@ -1,0 +1,30 @@
+name: Build and Test
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check API secret
+        env:
+          POLLINATIONS_API_KEY: ${{ secrets.POLLINATIONS_API_KEY }}
+        run: |
+          if [ -z "$POLLINATIONS_API_KEY" ]; then
+            echo "API key is missing"
+            exit 1
+          fi
+          echo "API key is configured successfully"
+
+      - name: Show files
+        run: |
+          echo "Repository checked successfully"
+          ls -la
