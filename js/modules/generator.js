@@ -43,11 +43,12 @@ export async function generateImage(
     return;
   }
 
-  if (!settings.apiKey) {
-    showToast('Please enter your API key.', true);
-    return;
-  }
+  onStart?.();
 
+try {
+  const enhancedPrompt = enhancePrompt(prompt);
+
+  const url = buildImageUrl(enhancedPrompt, settings);
   onStart?.();
 
   try {
