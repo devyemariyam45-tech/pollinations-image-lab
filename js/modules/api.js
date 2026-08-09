@@ -1,42 +1,41 @@
-import { STORAGE_KEYS, DEFAULT_SETTINGS } from './config.js';
-
 export async function fetchAvailableModels() {
-  const res = await fetch('https://gen.pollinations.ai/image/models');
-
-  if (!res.ok) {
-    throw new Error(`HTTP ${res.status}`);
-  }
-
-  const data = await res.json();
-
-  if (!Array.isArray(data)) {
-    throw new Error('Invalid response format');
-  }
-
-  return data.map(m => m.name || m.id).filter(Boolean);
+  return [
+    'flux',
+    'zimage',
+    'kontext',
+    'nanobanana',
+    'seedream',
+    'gptimage'
+  ];
 }
 
-export function buildImageUrl(prompt, settings) {
-  const params = new URLSearchParams();
-
-  params.set('model', settings.model || 'flux');
-  params.set('key', settings.apiKey);
-
-  if (settings.width) {
-    params.set('width', settings.width);
+export async function buildImageUrl(prompt, settings = {}) {
+  if (!prompt?.trim()) {
+    throw new Error('Please enter a prompt.');
   }
 
-  if (settings.height) {
-    params.set('height', settings.height);
+  const apiKey = process.env.POLLINATIONS_API_KEY;
+
+  if (!apiKey) {
+    throw new Error('POLLINATIONS_API_KEY is not configured.');
   }
+
+  const params = new URLSearchParams({
+    model: settings.model || 'flux',
+    width: String(settings.width || 1024),
+    height: String(settings.height || 1024),
+    key: apiKey
+  });
 
   if (settings.seed) {
-    params.set('seed', settings.seed);
+    params.append('seed', String(settings.seed));
   }
 
   if (settings.transparent) {
-    params.set('transparent', 'true');
+    params.append('transparent', 'true');
   }
 
-  return `https://gen.pollinations.ai/image/${encodeURIComponent(prompt)}?${params.toString()}`;
+  return `https://gen.pollinations.ai/image/${encodeURIComponent(
+    prompt.trim()
+  )}?${params.toString()}`;
 }
